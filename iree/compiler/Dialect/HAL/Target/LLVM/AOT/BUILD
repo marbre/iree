@@ -59,6 +59,7 @@ cc_library(
 cc_library(
     name = "LLVMAOTTargetLinker",
     hdrs = ["LLVMAOTTargetLinker.h"],
+    srcs = ["LLVMAOTTargetLinker.cpp"],
     deps = platform_trampoline_deps("LLVMAOTTargetLinker", "compiler/Dialect/HAL/Target/LLVM/AOT"),
 )
 
@@ -66,7 +67,9 @@ cc_library(
     name = "LLVMAOTTargetLinker_hdrs",
     hdrs = ["LLVMAOTTargetLinker.h"],
     deps = [
-        "//iree/base:status",
         "//iree/compiler/Dialect/HAL/Target/LLVM:LLVMTargetOptions",
+        "@llvm-project//llvm:Core",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//mlir:Support",
     ],
 )

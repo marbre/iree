@@ -24,10 +24,17 @@ namespace IREE {
 namespace HAL {
 
 struct LLVMTargetOptions {
+  // Target machine configuration.
+  std::string targetTriple;
+  std::string targetCPU;
+  std::string targetCPUFeatures;
+
   llvm::PipelineTuningOptions pipelineTuningOptions;
   llvm::PassBuilder::OptimizationLevel optLevel;
   llvm::TargetOptions options;
-  std::string targetTriple;
+
+  // True to keep linker artifacts for debugging.
+  bool keepArtifacts = false;
 };
 
 // Returns LLVMTargetOptions struct intialized with the

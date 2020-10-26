@@ -22,8 +22,9 @@ cc_library(
     name = "LLVMAOTTargetLinker_internal",
     srcs = ["LLVMAOTTargetLinker.cpp"],
     deps = [
-        "//iree/base:status",
         "//iree/compiler/Dialect/HAL/Target/LLVM/AOT:LLVMAOTTargetLinker_hdrs",
+        "@llvm-project//llvm:Core",
         "@llvm-project//llvm:Support",
+        "@llvm-project//mlir:Support",
     ],
 )

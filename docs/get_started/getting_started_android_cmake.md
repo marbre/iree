@@ -276,8 +276,10 @@ Translate a source MLIR into an IREE module:
 ```shell
 $ ../iree-build-android/host/bin/iree-translate \
   -iree-mlir-to-vm-bytecode-module \
-  -iree-llvm-target-triple=aarch64-linux-android \
   -iree-hal-target-backends=dylib-llvm-aot \
+  -iree-llvm-target-triple=aarch64-linux-android \
+  -iree-llvm-target-cpu= \
+  -iree-llvm-target-cpu-features= \
   $PWD/iree/tools/test/simple.mlir \
   -o /tmp/simple-llvm_aot.vmfb
 ```

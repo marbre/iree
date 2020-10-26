@@ -49,6 +49,8 @@ iree_cc_library(
     LLVMAOTTargetLinker
   HDRS
     "LLVMAOTTargetLinker.h"
+  SRCS
+    "LLVMAOTTargetLinker.cpp"
   DEPS
     iree::compiler::Dialect::HAL::Target::LLVM::AOT::internal::LLVMAOTTargetLinker_internal
   PUBLIC
@@ -60,7 +62,9 @@ iree_cc_library(
   HDRS
     "LLVMAOTTargetLinker.h"
   DEPS
-    iree::base::status
+    LLVMCore
+    LLVMSupport
+    MLIRSupport
     iree::compiler::Dialect::HAL::Target::LLVM::LLVMTargetOptions
   PUBLIC
 )

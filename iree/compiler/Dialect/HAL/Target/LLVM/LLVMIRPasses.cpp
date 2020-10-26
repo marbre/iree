@@ -37,10 +37,10 @@ std::unique_ptr<llvm::TargetMachine> createTargetMachine(
   auto target = llvm::TargetRegistry::lookupTarget(targetOptions.targetTriple,
                                                    errorMessage);
   if (!target) return nullptr;
-  // TODO(ataei): Once we have an AOT backend pass cpu and cpu-features
   std::unique_ptr<llvm::TargetMachine> machine(target->createTargetMachine(
-      targetOptions.targetTriple, "generic" /* cpu e.g k8*/,
-      "" /* cpu features e.g avx512fma*/, targetOptions.options, {}));
+      targetOptions.targetTriple, targetOptions.targetCPU /* cpu e.g k8*/,
+      targetOptions.targetCPUFeatures /* cpu features e.g avx512fma*/,
+      targetOptions.options, {}));
   return machine;
 }
 

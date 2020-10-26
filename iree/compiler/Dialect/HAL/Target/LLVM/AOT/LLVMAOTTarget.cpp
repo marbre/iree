@@ -46,8 +46,6 @@ class LLVMAOTTargetBackend final : public LLVMBaseTargetBackend {
     // multi-threading issues.
     llvm::LLVMContext context;
 
-    iree::DyLibExecutableDefT dyLibExecutableDef;
-
     // At this moment we are leaving MLIR LLVM dialect land translating module
     // into target independent LLVMIR.
     auto llvmModule =
@@ -56,59 +54,90 @@ class LLVMAOTTargetBackend final : public LLVMBaseTargetBackend {
       return failure();
     }
 
-    // Create invocation function an populate entry_points.
-    auto entryPointOps = targetOp.getBlock().getOps<ExecutableEntryPointOp>();
-
-    for (auto entryPointOp : entryPointOps) {
+    // Export all entry points such that they are accessible on the dynamic
+    // libraries we generate.
+    iree::DyLibExecutableDefT dyLibExecutableDef;
+    SmallVector<StringRef, 8> entryPointNames;
+    for (auto entryPointOp :
+         targetOp.getBlock().getOps<ExecutableEntryPointOp>()) {
       dyLibExecutableDef.entry_points.push_back(
           std::string(entryPointOp.sym_name()));
+      entryPointNames.push_back(entryPointOp.sym_name());
     }
 
-    // LLVMIR opt passes.
-    auto targetMachine = createTargetMachine(options_);
-    if (!targetMachine) {
-      targetOp.emitError("Can't create target machine for target triple: " +
-                         options_.targetTriple);
+    // Try to grab a linker tool based on the options (and target environment).
+    llvm::Triple targetTriple(options_.targetTriple);
+    auto linkerTool = LinkerTool::getForTarget(targetTriple, options_);
+    if (!linkerTool) {
       return failure();
     }
 
+    // Configure the module with any code generation options required later by
+    // linking (such as initializer functions).
+    if (failed(
+            linkerTool->configureModule(llvmModule.get(), entryPointNames))) {
+      return targetOp.emitError()
+             << "failed to configure LLVM module for target linker";
+    }
+
+    // LLVM opt passes that perform code generation optimizations/transformation
+    // similar to what a frontend would do before passing to linking.
+    auto targetMachine = createTargetMachine(options_);
+    if (!targetMachine) {
+      return targetOp.emitError()
+             << "Can't create target machine for target triple: "
+             << options_.targetTriple;
+    }
     llvmModule->setDataLayout(targetMachine->createDataLayout());
     llvmModule->setTargetTriple(targetMachine->getTargetTriple().str());
-
     if (failed(
             runLLVMIRPasses(options_, targetMachine.get(), llvmModule.get()))) {
       return targetOp.emitError(
           "Can't build LLVMIR opt passes for ExecutableOp module");
     }
 
-    std::string objData;
-    if (failed(runEmitObjFilePasses(targetMachine.get(), llvmModule.get(),
-                                    &objData))) {
-      return targetOp.emitError("Can't compile LLVMIR module to an obj");
+    // Emit object files.
+    SmallVector<Artifact, 4> objectFiles;
+    {
+      // NOTE: today we just use a single object file, however if we wanted to
+      // scale code generation and linking we'd want to generate one per
+      // function (or something like that).
+      std::string objectData;
+      if (failed(runEmitObjFilePasses(targetMachine.get(), llvmModule.get(),
+                                      &objectData))) {
+        return targetOp.emitError("Can't compile LLVMIR module to an obj");
+      }
+      auto objectFile = Artifact::createTemporary("llvmaot", "obj");
+      auto &os = objectFile.outputFile->os();
+      os << objectData;
+      os.flush();
+      objectFiles.push_back(std::move(objectFile));
     }
 
-    std::string sharedLibData;
-    const char *linkerToolPath = std::getenv("IREE_LLVMAOT_LINKER_PATH");
-    if (linkerToolPath != nullptr) {
-      auto sharedLibDataStatus = linkLLVMAOTObjects(linkerToolPath, objData);
-      if (!sharedLibDataStatus.ok()) {
-        return targetOp.emitError(
-            "Can't link executable and generate target dylib, using linker "
-            "toolchain: '" +
-            std::string(linkerToolPath) + "'");
-      }
-      sharedLibData = sharedLibDataStatus.value();
-    } else {
-      auto sharedLibDataStatus = linkLLVMAOTObjectsWithLLDElf(objData);
-      if (!sharedLibDataStatus.ok()) {
-        return targetOp.emitError(
-            "Can't link executable and generate target dylib using "
-            "lld::elf::link");
-      }
-      sharedLibData = sharedLibDataStatus.value();
+    // Link the generated object files into a dylib.
+    auto linkArtifactsOr = linkerTool->linkDynamicLibrary(objectFiles);
+    if (!linkArtifactsOr.hasValue()) {
+      return targetOp.emitError() << "Can't link executable and generate "
+                                     "target dylib, using linker "
+                                     "toolchain "
+                                  << linkerTool->getToolPath();
     }
-    dyLibExecutableDef.library_embedded = {sharedLibData.begin(),
-                                           sharedLibData.end()};
+    auto &linkArtifacts = linkArtifactsOr.getValue();
+    dyLibExecutableDef.library_embedded =
+        linkArtifacts.libraryFile.read().getValueOr(std::vector<int8_t>());
+    if (dyLibExecutableDef.library_embedded.empty()) {
+      return targetOp.emitError() << "Failed to read back library file at "
+                                  << linkArtifacts.libraryFile.path;
+    }
+
+    // TODO(benvanik): embed PDB file, if present.
+
+    if (options_.keepArtifacts) {
+      targetOp.emitRemark()
+          << "Linker artifacts for " << targetOp.getName() << " preserved:\n"
+          << "    " << linkArtifacts.libraryFile.path;
+      linkArtifacts.keepAllFiles();
+    }
 
     ::flatbuffers::FlatBufferBuilder fbb;
     auto executableOffset =
