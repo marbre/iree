@@ -21,7 +21,7 @@ function(iree_tablegen_library)
   cmake_parse_arguments(
     _RULE
     "TESTONLY"
-    "NAME;TBLGEN"
+    "NAME;TBLGEN;INCLUDE_DIR"
     "TD_FILE;OUTS"
     ${ARGN}
   )
@@ -44,6 +44,7 @@ function(iree_tablegen_library)
   set(_INCLUDE_DIRS
     "${MLIR_INCLUDE_DIRS}"
     "${IREE_SOURCE_DIR}"
+    "${_RULE_INCLUDE_DIR}"
   )
   list(APPEND _INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
   list(TRANSFORM _INCLUDE_DIRS PREPEND "-I")

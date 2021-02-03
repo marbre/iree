@@ -20,6 +20,7 @@ if(${IREE_ENABLE_EMITC})
       VMToEmitC
     HDRS
       "ConvertVMToEmitC.h"
+      "VMToEmitCPatterns.h.inc"
     SRCS
       "ConvertVMToEmitC.cpp"
     DEPS
@@ -33,4 +34,16 @@ if(${IREE_ENABLE_EMITC})
       "${PROJECT_BINARY_DIR}/third_party/mlir-emitc/include"
     PUBLIC
   )
+
+  iree_tablegen_library(
+    NAME
+      VMToEmitCPatternsGen
+    TD_FILE
+      "VMToEmitCPatterns.td"
+    INCLUDE_DIR
+      "${PROJECT_SOURCE_DIR}/third_party/mlir-emitc/include"
+    OUTS
+      -gen-rewriters VMToEmitCPatterns.h.inc
+  )
+
 endif()
