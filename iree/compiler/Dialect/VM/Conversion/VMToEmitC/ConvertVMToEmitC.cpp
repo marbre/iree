@@ -26,6 +26,8 @@ namespace iree_compiler {
 
 namespace {
 
+#include "iree/compiler/Dialect/VM/Conversion/VMToEmitC/VMToEmitCPatterns.h.inc"
+
 // Convert operations which don't have attributes
 template <typename SrcOpTy>
 class NoAttributeOpConversion : public OpConversionPattern<SrcOpTy> {
@@ -114,8 +116,8 @@ class ConstOpConversion : public OpConversionPattern<SrcOpTy> {
 void populateVMToCPatterns(MLIRContext *context,
                            OwningRewritePatternList &patterns) {
   // Native integer arithmetic ops
-  patterns.insert<NoAttributeOpConversion<IREE::VM::AddI32Op>>(context,
-                                                               "vm_add_i32");
+  //patterns.insert<NoAttributeOpConversion<IREE::VM::AddI32Op>>(context,
+  //                                                             "vm_add_i32");
   patterns.insert<NoAttributeOpConversion<IREE::VM::SubI32Op>>(context,
                                                                "vm_sub_i32");
   patterns.insert<NoAttributeOpConversion<IREE::VM::MulI32Op>>(context,
@@ -128,8 +130,8 @@ void populateVMToCPatterns(MLIRContext *context,
                                                                 "vm_rem_i32s");
   patterns.insert<NoAttributeOpConversion<IREE::VM::RemI32UOp>>(context,
                                                                 "vm_rem_i32u");
-  patterns.insert<NoAttributeOpConversion<IREE::VM::NotI32Op>>(context,
-                                                               "vm_not_i32");
+  //patterns.insert<NoAttributeOpConversion<IREE::VM::NotI32Op>>(context,
+  //                                                             "vm_not_i32");
   patterns.insert<NoAttributeOpConversion<IREE::VM::AndI32Op>>(context,
                                                                "vm_and_i32");
   patterns.insert<NoAttributeOpConversion<IREE::VM::OrI32Op>>(context,
@@ -169,6 +171,7 @@ class ConvertVMToEmitCPass
     ConversionTarget target(getContext());
 
     OwningRewritePatternList patterns;
+    populateWithGenerated(&getContext(), patterns);
     populateVMToCPatterns(&getContext(), patterns);
 
     target.addLegalDialect<mlir::emitc::EmitCDialect>();
