@@ -141,7 +141,7 @@ struct CppEmitter {
   bool hasBlockLabel(Block &block);
 
   /// Returns the output stream.
-  raw_ostream &ostream() { return os; };
+  raw_indented_ostream &ostream() { return os; };
 
   /// Returns if all variables for op results and basic block arguments need to
   /// be declared at the beginning of a function.
@@ -152,7 +152,7 @@ private:
   using BlockMapper = llvm::ScopedHashTable<Block *, std::string>;
 
   /// Output stream to emit to.
-  raw_ostream &os;
+  raw_indented_ostream os;
 
   /// Boolean to enforce that all variables for op results and block
   /// arguments are declared at the beginning of the function. This also
@@ -172,8 +172,10 @@ private:
 };
 
 /// Translates the given operation to C++ code. The operation or operations in
-/// the region of 'op' need almost all be in EmitC dialect.
-LogicalResult translateToCpp(Operation &op, raw_ostream &os,
+/// the region of 'op' need almost all be in EmitC dialect. The parameter
+/// 'declareVariablesAtTop' enforces that all variables for op results and block
+/// arguments are declared at the beginning of the function.
+LogicalResult translateToCpp(Operation *op, raw_ostream &os,
                              bool declareVariablesAtTop = false);
 } // namespace emitc
 } // namespace mlir
