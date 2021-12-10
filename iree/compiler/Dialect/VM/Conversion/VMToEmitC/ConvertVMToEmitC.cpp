@@ -29,7 +29,7 @@ namespace iree_compiler {
 namespace {
 
 // TODO(simon-camp/marbre): Use this function throughout the conversions.
-Optional<std::string> getCType(Type type) {
+Optional<std::string> getCType(Type type, bool refAsPointer = true) {
   if (auto iType = type.dyn_cast<IntegerType>()) {
     switch (iType.getWidth()) {
       case 32:
@@ -53,7 +53,8 @@ Optional<std::string> getCType(Type type) {
   }
 
   if (type.isa<IREE::VM::RefType>()) {
-    return std::string("iree_vm_ref_t*");
+    return refAsPointer ? std::string("iree_vm_ref_t*")
+                        : std::string("iree_vm_ref_t");
   }
 
   return None;
@@ -181,6 +182,7 @@ Optional<Value> findRef(mlir::FuncOp &parentFuncOp,
   return result;
 }
 
+/// Convert VM::FuncOp to mlir::FuncOp.
 LogicalResult convertFuncOp(IREE::VM::FuncOp funcOp,
                             IREE::VM::EmitCTypeConverter &typeConverter,
                             VMAnalysisCache &vmAnalysisCache,
@@ -199,33 +201,38 @@ LogicalResult convertFuncOp(IREE::VM::FuncOp funcOp,
   std::string moduleStateTypeName = (moduleOp.getName() + "_state_t*").str();
 
   Type stackType = emitc::OpaqueType::get(ctx, "iree_vm_stack_t*");
-  Type moduleType = emitc::OpaqueType::get(ctx, moduleTypeName);
-  Type moduleStateType = emitc::OpaqueType::get(ctx, moduleStateTypeName);
+  Type callType = emitc::OpaqueType::get(ctx, "iree_vm_function_call_t*");
+  Type moduleType = emitc::OpaqueType::get(ctx, "void*");
+  Type moduleStateType = emitc::OpaqueType::get(ctx, "void*");
+  Type executionResultType =
+      emitc::OpaqueType::get(ctx, "iree_vm_execution_result_t*");
 
-  SmallVector<Type, 3> inputTypes = {stackType, moduleType, moduleStateType};
-  SmallVector<Type, 1> outputTypes;
+  SmallVector<Type, 5> inputTypes = {stackType, callType, moduleType,
+                                     moduleStateType, executionResultType};
+  // SmallVector<Type, 1> outputTypes;
 
   for (auto &inputType : funcType.getInputs()) {
     inputTypes.push_back(inputType);
   }
 
-  for (auto &resultType : funcType.getResults()) {
-    Optional<std::string> cType = getCType(resultType);
-    if (!cType.hasValue()) {
-      return funcOp.emitError() << "unable to emit C type";
-    }
-    std::string cPtrType;
-    // We pass refs as iree_vm_ref_t* regardless of whether it is an in or out
-    // parameter
-    if (resultType.isa<IREE::VM::RefType>()) {
-      cPtrType = cType.getValue();
-    } else {
-      cPtrType = cType.getValue() + std::string("*");
-    }
-    Type type = emitc::OpaqueType::get(ctx, cPtrType);
-    inputTypes.push_back(type);
-    outputTypes.push_back(type);
-  }
+  // for (auto &resultType : funcType.getResults()) {
+  //   Optional<std::string> cType = getCType(resultType);
+  //   if (!cType.hasValue()) {
+  //     return funcOp.emitError() << "unable to emit C type";
+  //   }
+  //   std::string cPtrType;
+  //   // We pass refs as iree_vm_ref_t* regardless of whether it is an in or
+  //   out
+  //   // parameter
+  //   if (resultType.isa<IREE::VM::RefType>()) {
+  //     cPtrType = cType.getValue();
+  //   } else {
+  //     cPtrType = cType.getValue() + std::string("*");
+  //   }
+  //   Type type = emitc::OpaqueType::get(ctx, cPtrType);
+  //   inputTypes.push_back(type);
+  //   outputTypes.push_back(type);
+  // }
 
   auto newFuncType = mlir::FunctionType::get(
       ctx, {inputTypes}, {emitc::OpaqueType::get(ctx, "iree_status_t")});
@@ -253,11 +260,15 @@ LogicalResult convertFuncOp(IREE::VM::FuncOp funcOp,
            << "branches to the entry block are not supported for now.";
   }
 
-  entryBlock.insertArgument(static_cast<unsigned>(0), stackType);
-  entryBlock.insertArgument(static_cast<unsigned>(1), moduleType);
-  entryBlock.insertArgument(static_cast<unsigned>(2), moduleStateType);
+  // entryBlock.insertArgument(inputTypes);
 
-  entryBlock.addArguments(outputTypes);
+  entryBlock.insertArgument(static_cast<unsigned>(0), stackType);
+  entryBlock.insertArgument(static_cast<unsigned>(1), callType);
+  entryBlock.insertArgument(static_cast<unsigned>(2), moduleType);
+  entryBlock.insertArgument(static_cast<unsigned>(3), moduleStateType);
+  entryBlock.insertArgument(static_cast<unsigned>(4), executionResultType);
+
+  // entryBlock.addArguments(outputTypes);
 
   auto ptr = vmAnalysisCache.find(funcOp.getOperation());
   if (ptr == vmAnalysisCache.end()) {
@@ -275,9 +286,9 @@ LogicalResult convertFuncOp(IREE::VM::FuncOp funcOp,
   }
 
   // Add constant ops for local refs
-  const int numRefArgs = llvm::count_if(inputTypes, [](Type inputType) {
-    return inputType.isa<IREE::VM::RefType>();
-  });
+  const int numRefArgs = llvm::count_if(
+      funcType.getInputs(),
+      [](Type inputType) { return inputType.isa<IREE::VM::RefType>(); });
   const int numLocalRefs = ptr->second.getNumRefRegisters() - numRefArgs;
 
   builder.setInsertionPointToStart(&entryBlock);
@@ -1455,23 +1466,153 @@ class FuncOpConversion : public OpConversionPattern<mlir::FuncOp> {
   LogicalResult matchAndRewrite(
       mlir::FuncOp funcOp, OpAdaptor adaptor,
       ConversionPatternRewriter &rewriter) const override {
+    auto ctx = funcOp.getContext();
+    auto loc = funcOp.getLoc();
+
+    rewriter.startRootUpdate(funcOp.getOperation());
+
+    // unpack inputs
+    /*
+    typedef struct {
+    int32_t arg0;
+    } args_t;
+    typedef struct {
+    int32_t ret0;
+    } results_t;
+
+    const args_t* args = (const args_t*)call->arguments.data;
+    results_t* results = (results_t*)call->results.data;
+
+    results->ret0 = ...;
+    */
+
+    // The first arguments are (stack, call, module, module_state, execution
+    // result). Followed by the orignal arguments, which we need to replace
+    // here.
+    const unsigned int kNumArguments = 5;
+    if (funcOp.getNumArguments() < kNumArguments) {
+      return funcOp.emitError() << "too few arguments";
+    }
+
+    Block &entryBlock = funcOp.getBlocks().front();
+    SmallVector<Value> argumentReplacements;
+
+    rewriter.setInsertionPointToStart(&entryBlock);
+    // TODO:
+    // - call macros to typedef the argument struct
+    // - call macros to typedef the result struct
+    // - unpack arguments to new Values
+    std::string structBody;
+
+    // vI = args->argI;
+    for (unsigned int i = kNumArguments; i < funcOp.getNumArguments(); ++i) {
+      Type type = funcOp.getArgument(i).getType();
+      Optional<std::string> cType = getCType(type, false);
+      if (!cType.hasValue()) {
+        return funcOp.emitError() << "unable to map function argument type to "
+                                     "c type in argument struct declaration.";
+      }
+      structBody += cType.getValue() + " arg" + std::to_string(i) + ";\n";
+    }
+
+    llvm::errs() << "Generating argument struct\n";
+    rewriter.create<emitc::CallOp>(
+        /*location=*/loc,
+        /*type=*/TypeRange{},
+        /*callee=*/StringAttr::get(ctx, "EMITC_TYPEDEF_STRUCT"),
+        /*args=*/
+        ArrayAttr::get(ctx, {emitc::OpaqueAttr::get(ctx, "args_t"),
+                             emitc::OpaqueAttr::get(ctx, structBody)}),
+        /*templateArgs=*/ArrayAttr{},
+        /*operands=*/ArrayRef<Value>{});
+
+    // const args_t* args = (const args_t*)call->arguments.data;
+    // call->arguments
+    auto callArguments = rewriter.create<emitc::CallOp>(
+        /*location=*/loc,
+        /*type=*/emitc::OpaqueType::get(ctx, "iree_byte_span_t"),
+        /*callee=*/StringAttr::get(ctx, "EMITC_STRUCT_PTR_MEMBER"),
+        /*args=*/
+        ArrayAttr::get(ctx, {rewriter.getIndexAttr(0),
+                             emitc::OpaqueAttr::get(ctx, "arguments")}),
+        /*templateArgs=*/ArrayAttr{},
+        /*operands=*/ArrayRef<Value>{funcOp.getArgument(1)});
+
+    // arguments.data
+    auto argumentsData = rewriter.create<emitc::CallOp>(
+        /*location=*/loc,
+        /*type=*/emitc::OpaqueType::get(ctx, "uint8_t*"),
+        /*callee=*/StringAttr::get(ctx, "EMITC_STRUCT_MEMBER"),
+        /*args=*/
+        ArrayAttr::get(ctx, {rewriter.getIndexAttr(0),
+                             emitc::OpaqueAttr::get(ctx, "data")}),
+        /*templateArgs=*/ArrayAttr{},
+        /*operands=*/ArrayRef<Value>{callArguments.getResult(0)});
+
+    // cast
+    auto arguments = rewriter.create<emitc::CallOp>(
+        /*location=*/loc,
+        /*type=*/emitc::OpaqueType::get(ctx, "const args_t*"),
+        /*callee=*/StringAttr::get(ctx, "EMITC_CAST"),
+        /*args=*/
+        ArrayAttr::get(ctx, {rewriter.getIndexAttr(0),
+                             emitc::OpaqueAttr::get(ctx, "const args_t*")}),
+        /*templateArgs=*/ArrayAttr{},
+        /*operands=*/ArrayRef<Value>{argumentsData.getResult(0)});
+
+    // TODO(simon-camp): Cast result struct
+    // results_t* results = (results_t*)call->results.data;
+
     TypeConverter::SignatureConversion signatureConverter(
         funcOp.getType().getNumInputs());
     TypeConverter typeConverter;
+
+    llvm::errs() << "Populating signature conversion\n";
     for (const auto &arg : llvm::enumerate(funcOp.getArguments())) {
-      Type convertedType =
-          getTypeConverter()->convertType(arg.value().getType());
-      signatureConverter.addInputs(arg.index(), convertedType);
+      if (arg.index() < kNumArguments) {
+        Type convertedType =
+            getTypeConverter()->convertType(arg.value().getType());
+        signatureConverter.addInputs(arg.index(), convertedType);
+      } else {
+        Optional<std::string> cType = getCType(arg.value().getType(), false);
+
+        // Unpack argument
+        auto argument = rewriter.create<emitc::CallOp>(
+            /*location=*/loc,
+            /*type=*/emitc::OpaqueType::get(ctx, cType.getValue()),
+            /*callee=*/StringAttr::get(ctx, "EMITC_STRUCT_PTR_MEMBER"),
+            /*args=*/
+            ArrayAttr::get(ctx,
+                           {rewriter.getIndexAttr(0),
+                            emitc::OpaqueAttr::get(
+                                ctx, "arg" + std::to_string(arg.index()))}),
+            /*templateArgs=*/ArrayAttr{},
+            /*operands=*/ArrayRef<Value>{arguments.getResult(0)});
+
+        // TODO(simon-camp): replace all uses of arg.value() with
+        // argument.getResult(0). IREE::VM::RefTypes need to be speical cased.
+
+        signatureConverter.remapInput(arg.index(), argument.getResult(0));
+      }
     }
 
     rewriter.applySignatureConversion(&funcOp.getBody(), signatureConverter);
 
+    for (Type type : signatureConverter.getConvertedTypes()) {
+      llvm::errs() << "Type: " << type << "\n";
+    }
     // Creates a new function with the updated signature.
-    rewriter.updateRootInPlace(funcOp, [&] {
-      funcOp.setType(
-          rewriter.getFunctionType(signatureConverter.getConvertedTypes(),
-                                   funcOp.getType().getResults()));
-    });
+    // rewriter.updateRootInPlace(funcOp, [&] {
+    //   funcOp.setType(
+    //       rewriter.getFunctionType(signatureConverter.getConvertedTypes(),
+    //                                funcOp.getType().getResults()));
+    // });
+
+    funcOp.setType(rewriter.getFunctionType(
+        signatureConverter.getConvertedTypes(), funcOp.getType().getResults()));
+
+    rewriter.finalizeRootUpdate(funcOp.getOperation());
+
     return success();
   }
 
@@ -3777,10 +3918,10 @@ class ConvertVMToEmitCPass
       funcOp.erase();
     }
 
-    // Generate func ops that implement the C API.
-    if (failed(createAPIFunctions(module, vmAnalysisCache))) {
-      return signalPassFailure();
-    }
+    // // Generate func ops that implement the C API.
+    // if (failed(createAPIFunctions(module, vmAnalysisCache))) {
+    //   return signalPassFailure();
+    // }
 
     OwningRewritePatternList patterns(&getContext());
     populateVMToEmitCPatterns(&getContext(), target, typeConverter, patterns,
@@ -3791,7 +3932,8 @@ class ConvertVMToEmitCPass
         mlir::arith::ArithmeticDialect, mlir::math::MathDialect>();
 
     target.addDynamicallyLegalOp<mlir::FuncOp>([&](mlir::FuncOp op) {
-      return typeConverter.isSignatureLegal(op.getType());
+      // TODO(simon-camp):
+      return op.getNumArguments() == 5;
     });
 
     // Structural ops
@@ -3818,6 +3960,11 @@ class ConvertVMToEmitCPass
 
     // Remove unused block arguments from refs
     if (failed(removeBlockArguments(module, blockArgsToRemove))) {
+      return signalPassFailure();
+    }
+
+    // Generate func ops that implement the C API.
+    if (failed(createAPIFunctions(module, vmAnalysisCache))) {
       return signalPassFailure();
     }
 
