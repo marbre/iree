@@ -42,6 +42,28 @@ static void printModuleComment(IREE::VM::ModuleOp &moduleOp,
          << std::string(77, '=') << "\n";
 }
 
+static LogicalResult printFunctionDeclaration(
+    mlir::FuncOp funcOp, llvm::raw_ostream &output,
+    mlir::emitc::CppEmitter &emitter) {
+  Operation *op = funcOp.getOperation();
+  if (op->hasAttr("emitc.static")) output << "static ";
+
+  if (failed(emitter.emitTypes(funcOp.getLoc(), funcOp.getType().getResults())))
+    return failure();
+  output << " " << funcOp.getName();
+
+  output << "(";
+
+  bool error = false;
+  llvm::interleaveComma(funcOp.getArguments(), output, [&](BlockArgument arg) {
+    if (failed(emitter.emitType(funcOp.getLoc(), arg.getType()))) error = true;
+  });
+  if (error) return failure();
+  output << ");\n";
+
+  return success();
+}
+
 static LogicalResult printRodataBuffers(IREE::VM::ModuleOp &moduleOp,
                                         mlir::emitc::CppEmitter &emitter) {
   llvm::raw_ostream &output = emitter.ostream();
@@ -326,11 +348,39 @@ LogicalResult translateModuleToC(IREE::VM::ModuleOp moduleOp,
     return success();
   }
 
+  std::string includeGuard = moduleOp.getName().upper();
+  output << "#ifndef " << includeGuard << "_H_\n";
+  output << "#define " << includeGuard << "_H_\n";
+
   auto printInclude = [&output](std::string include) {
     output << "#include \"" << include << "\"\n";
   };
 
   printInclude("iree/vm/api.h");
+  output << "\n";
+
+  output << "#ifdef __cplusplus\n";
+  output << "extern \"C\" {\n";
+  output << "#endif  // __cplusplus\n";
+  output << "\n";
+
+  mlir::emitc::CppEmitter emitter(output, /*declareVariablesAtTop=*/true);
+  for (auto funcOp : moduleOp.getOps<mlir::FuncOp>()) {
+    Operation *op = funcOp.getOperation();
+    if (!op->hasAttr("vm.module.constructor")) continue;
+    if (failed(printFunctionDeclaration(funcOp, output, emitter)))
+      return failure();
+  }
+
+  output << "\n";
+  output << "#ifdef __cplusplus\n";
+  output << "}  // extern \"C\"\n";
+  output << "#endif  // __cplusplus\n";
+  output << "\n";
+
+  output << "#endif  // " << includeGuard << "_H_\n\n";
+  output << "#if defined(" << includeGuard << "_IMPL)\n";
+
   printInclude("iree/vm/ops.h");
   printInclude("iree/vm/ops_emitc.h");
   printInclude("iree/vm/shims_emitc.h");
@@ -342,7 +392,6 @@ LogicalResult translateModuleToC(IREE::VM::ModuleOp moduleOp,
   printModuleComment(moduleOp, output);
   output << "\n";
 
-  mlir::emitc::CppEmitter emitter(output, /*declareVariablesAtTop=*/true);
   mlir::emitc::CppEmitter::Scope scope(emitter);
 
   if (failed(printRodataBuffers(moduleOp, emitter))) {
@@ -359,23 +408,9 @@ LogicalResult translateModuleToC(IREE::VM::ModuleOp moduleOp,
 
   for (auto funcOp : moduleOp.getOps<mlir::FuncOp>()) {
     Operation *op = funcOp.getOperation();
-    if (op->hasAttr("emitc.static")) output << "static ";
-
-    if (failed(
-            emitter.emitTypes(funcOp.getLoc(), funcOp.getType().getResults())))
+    if (op->hasAttr("vm.module.constructor")) continue;
+    if (failed(printFunctionDeclaration(funcOp, output, emitter)))
       return failure();
-    output << " " << funcOp.getName();
-
-    output << "(";
-
-    bool error = false;
-    llvm::interleaveComma(
-        funcOp.getArguments(), output, [&](BlockArgument arg) {
-          if (failed(emitter.emitType(funcOp.getLoc(), arg.getType())))
-            error = true;
-        });
-    if (error) return failure();
-    output << ");\n";
   }
 
   output << "// DEFINE FUNCTIONS\n";
@@ -410,6 +445,7 @@ LogicalResult translateModuleToC(IREE::VM::ModuleOp moduleOp,
       return failure();
   }
 
+  output << "#endif  // " << includeGuard << "_IMPL\n";
   return success();
 }
 

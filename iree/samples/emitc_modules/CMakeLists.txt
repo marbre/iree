@@ -17,13 +17,24 @@ if(${IREE_ENABLE_EMITC})
       "-iree-hal-target-backends=vmvx"
   )
 
+  iree_cc_library(
+    NAME
+      add_module_impl
+    HDRS
+      "add_module.h"
+    DEFINES
+      "ADD_MODULE_IMPL"
+    DEPS
+      ::add_module
+  )
+
   iree_cc_test(
     NAME
       add_module_test
     SRCS
       "add_module_test.cc"
     DEPS
-      ::add_module
+      ::add_module_impl
       iree::base
       iree::base::cc
       iree::testing::gtest
@@ -38,8 +49,8 @@ if(${IREE_ENABLE_EMITC})
     SRCS
       "import_module_test.cc"
     DEPS
-      ::import_module_a
-      ::import_module_b
+      ::import_module_a_impl
+      ::import_module_b_impl
       iree::base
       iree::base::cc
       iree::testing::gtest
@@ -60,9 +71,20 @@ if(${IREE_ENABLE_EMITC})
       "-iree-hal-target-backends=vmvx"
   )
 
+  iree_cc_library(
+    NAME
+      import_module_a_impl
+    HDRS
+      "import_module_a.h"
+    DEFINES
+      "MODULE_A_IMPL"
+    DEPS
+      ::import_module_a
+  )
+
   iree_c_module(
     NAME
-    import_module_b
+      import_module_b
     SRC
       "import_module_b.mlir"
     H_FILE_OUTPUT
@@ -70,5 +92,16 @@ if(${IREE_ENABLE_EMITC})
     FLAGS
       "-iree-mlir-to-vm-c-module"
       "-iree-hal-target-backends=vmvx"
+  )
+
+  iree_cc_library(
+    NAME
+      import_module_b_impl
+    HDRS
+      "import_module_b.h"
+    DEFINES
+      "MODULE_B_IMPL"
+    DEPS
+      ::import_module_b
   )
 endif()

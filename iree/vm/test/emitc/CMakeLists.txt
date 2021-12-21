@@ -19,29 +19,29 @@ iree_cc_test(
     iree::testing::gtest
     iree::testing::gtest_main
     iree::vm
-    ::arithmetic_ops
-    ::arithmetic_ops_f32
-    ::arithmetic_ops_i64
-    ::assignment_ops
-    ::assignment_ops_f32
-    ::assignment_ops_i64
-    ::buffer_ops
-    ::call_ops
-    ::comparison_ops
-    ::comparison_ops_f32
-    ::comparison_ops_i64
-    ::control_flow_ops
-    ::conversion_ops
-    ::conversion_ops_f32
-    ::conversion_ops_i64
-    ::global_ops
-    ::global_ops_f32
-    ::global_ops_i64
-    ::list_ops
-    ::list_variant_ops
-    ::ref_ops
-    ::shift_ops
-    ::shift_ops_i64
+    ::arithmetic_ops_impl
+    ::arithmetic_ops_f32_impl
+    ::arithmetic_ops_i64_impl
+    ::assignment_ops_impl
+    ::assignment_ops_f32_impl
+    ::assignment_ops_i64_impl
+    ::buffer_ops_impl
+    ::call_ops_impl
+    ::comparison_ops_impl
+    ::comparison_ops_f32_impl
+    ::comparison_ops_i64_impl
+    ::control_flow_ops_impl
+    ::conversion_ops_impl
+    ::conversion_ops_f32_impl
+    ::conversion_ops_i64_impl
+    ::global_ops_impl
+    ::global_ops_f32_impl
+    ::global_ops_i64_impl
+    ::list_ops_impl
+    ::list_variant_ops_impl
+    ::ref_ops_impl
+    ::shift_ops_impl
+    ::shift_ops_i64_impl
 )
 
 iree_c_module(
@@ -55,6 +55,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    arithmetic_ops_impl
+  HDRS
+    "arithmetic_ops.h"
+  DEFINES
+    "ARITHMETIC_OPS_IMPL"
+  DEPS
+    ::arithmetic_ops
+)
+
 iree_c_module(
   NAME
     arithmetic_ops_f32
@@ -64,6 +75,17 @@ iree_c_module(
     "arithmetic_ops_f32.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    arithmetic_ops_f32_impl
+  HDRS
+    "arithmetic_ops_f32.h"
+  DEFINES
+    "ARITHMETIC_OPS_F32_IMPL"
+  DEPS
+    ::arithmetic_ops_f32
 )
 
 iree_c_module(
@@ -77,6 +99,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    arithmetic_ops_i64_impl
+  HDRS
+    "arithmetic_ops_i64.h"
+  DEFINES
+    "ARITHMETIC_OPS_I64_IMPL"
+  DEPS
+    ::arithmetic_ops_i64
+)
+
 iree_c_module(
   NAME
     assignment_ops
@@ -86,6 +119,17 @@ iree_c_module(
     "assignment_ops.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+     assignment_ops_impl
+  HDRS
+    "assignment_ops.h"
+  DEFINES
+    "ASSIGNMENT_OPS_IMPL"
+  DEPS
+    ::assignment_ops
 )
 
 iree_c_module(
@@ -99,6 +143,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    assignment_ops_f32_impl
+  HDRS
+    "assignment_ops_f32.h"
+  DEFINES
+    "ASSIGNMENT_OPS_F32_IMPL"
+  DEPS
+    ::assignment_ops_f32
+)
+
 iree_c_module(
   NAME
     assignment_ops_i64
@@ -108,6 +163,17 @@ iree_c_module(
     "assignment_ops_i64.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    assignment_ops_i64_impl
+  HDRS
+    "assignment_ops_i64.h"
+  DEFINES
+    "ASSIGNMENT_OPS_I64_IMPL"
+  DEPS
+    ::assignment_ops_i64
 )
 
 iree_c_module(
@@ -121,6 +187,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    buffer_ops_impl
+  HDRS
+    "buffer_ops.h"
+  DEFINES
+    "BUFFER_OPS_IMPL"
+  DEPS
+    ::buffer_ops
+)
+
 iree_c_module(
   NAME
     call_ops
@@ -130,6 +207,17 @@ iree_c_module(
     "call_ops.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    call_ops_impl
+  HDRS
+    "call_ops.h"
+  DEFINES
+    "CALL_OPS_IMPL"
+  DEPS
+    ::call_ops
 )
 
 iree_c_module(
@@ -143,6 +231,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    comparison_ops_impl
+  HDRS
+    "comparison_ops.h"
+  DEFINES
+    "COMPARISON_OPS_IMPL"
+  DEPS
+    ::comparison_ops
+)
+
 iree_c_module(
   NAME
     comparison_ops_f32
@@ -152,6 +251,17 @@ iree_c_module(
     "comparison_ops_f32.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    comparison_ops_f32_impl
+  HDRS
+    "comparison_ops_f32.h"
+  DEFINES
+    "COMPARISON_OPS_F32_IMPL"
+  DEPS
+    ::comparison_ops_f32
 )
 
 iree_c_module(
@@ -165,6 +275,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    comparison_ops_i64_impl
+  HDRS
+    "comparison_ops_i64.h"
+  DEFINES
+    "COMPARISON_OPS_I64_IMPL"
+  DEPS
+    ::comparison_ops_i64
+)
+
 iree_c_module(
   NAME
     control_flow_ops
@@ -174,6 +295,17 @@ iree_c_module(
     "control_flow_ops.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    control_flow_ops_impl
+  HDRS
+    "control_flow_ops.h"
+  DEFINES
+    "CONTROL_FLOW_OPS_IMPL"
+  DEPS
+    ::control_flow_ops
 )
 
 iree_c_module(
@@ -187,6 +319,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    conversion_ops_impl
+  HDRS
+    ".h"
+  DEFINES
+    "CONVERSION_OPS_IMPL"
+  DEPS
+    ::conversion_ops
+)
+
 iree_c_module(
   NAME
     conversion_ops_f32
@@ -196,6 +339,17 @@ iree_c_module(
     "conversion_ops_f32.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    conversion_ops_f32_impl
+  HDRS
+    "conversion_ops_f32.h"
+  DEFINES
+    "CONVERSION_OPS_F32_IMPL"
+  DEPS
+    ::conversion_ops_f32
 )
 
 iree_c_module(
@@ -209,6 +363,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    conversion_ops_i64_impl
+  HDRS
+    "conversion_ops_i64.h"
+  DEFINES
+    "CONVERSION_OPS_I64_IMPL"
+  DEPS
+    ::conversion_ops_i64
+)
+
 iree_c_module(
   NAME
     global_ops
@@ -218,6 +383,17 @@ iree_c_module(
     "global_ops.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    global_ops_impl
+  HDRS
+    "global_ops.h"
+  DEFINES
+    "GLOBAL_OPS_IMPL"
+  DEPS
+    ::global_ops
 )
 
 iree_c_module(
@@ -231,6 +407,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    global_ops_f32_impl
+  HDRS
+    "global_ops_f32.h"
+  DEFINES
+    "GLOBAL_OPS_F32_IMPL"
+  DEPS
+    ::global_ops_f32
+)
+
 iree_c_module(
   NAME
     global_ops_i64
@@ -240,6 +427,17 @@ iree_c_module(
     "global_ops_i64.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    global_ops_i64_impl
+  HDRS
+    "global_ops_i64.h"
+  DEFINES
+    "GLOBAL_OPS_I64_IMPL"
+  DEPS
+    ::global_ops_i64
 )
 
 iree_c_module(
@@ -253,6 +451,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    list_ops_impl
+  HDRS
+    "list_ops.h"
+  DEFINES
+    "LIST_OPS_IMPL"
+  DEPS
+    ::list_ops
+)
+
 iree_c_module(
   NAME
     list_variant_ops
@@ -262,6 +471,17 @@ iree_c_module(
     "list_variant_ops.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    list_variant_ops_impl
+  HDRS
+    "list_variant_ops.h"
+  DEFINES
+    "LIST_VARIANT_OPS_IMPL"
+  DEPS
+    ::list_variant_ops
 )
 
 iree_c_module(
@@ -275,6 +495,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    ref_ops_impl
+  HDRS
+    "ref_ops.h"
+  DEFINES
+    "REF_OPS_IMPL"
+  DEPS
+    ::ref_ops
+)
+
 iree_c_module(
   NAME
     shift_ops
@@ -286,6 +517,17 @@ iree_c_module(
     "-iree-vm-ir-to-c-module"
 )
 
+iree_cc_library(
+  NAME
+    shift_ops_impl
+  HDRS
+    "shift_ops.h"
+  DEFINES
+    "SHIFT_OPS_IMPL"
+  DEPS
+    ::shift_ops
+)
+
 iree_c_module(
   NAME
     shift_ops_i64
@@ -295,6 +537,17 @@ iree_c_module(
     "shift_ops_i64.h"
   FLAGS
     "-iree-vm-ir-to-c-module"
+)
+
+iree_cc_library(
+  NAME
+    shift_ops_i64_impl
+  HDRS
+    "shift_ops_i64.h"
+  DEFINES
+    "SHIFT_OPS_I64_IMPL"
+  DEPS
+    ::shift_ops_i64
 )
 
 endif()
