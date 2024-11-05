@@ -144,7 +144,7 @@ def build_main_dist():
             # consistency in built packages, so hard-code it.
             "-DCMAKE_INSTALL_LIBDIR=lib",
             f"-DCMAKE_BUILD_TYPE=Release",
-            f"-DIREE_BUILD_COMPILER=ON",
+            f"-DIREE_BUILD_COMPILER=OFF",
             f"-DIREE_BUILD_PYTHON_BINDINGS=OFF",
             f"-DIREE_BUILD_SAMPLES=OFF",
             # cpuinfo is set to be removed and is problematic from an
