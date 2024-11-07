@@ -115,7 +115,7 @@ ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-12/bin/llvm-symbolizer \
     `PYTHONPATH` pointing at your build directory:
 
     ```shell hl_lines="14-18"
-    python -m pip uninstall iree-runtime
+    python -m pip uninstall iree-base-runtime
     python -m pip uninstall iree-compiler
     source iree-build/.env && export PYTHONPATH
 

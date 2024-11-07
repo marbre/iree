@@ -16,7 +16,7 @@ components:
 | PIP package name             | Description                                                                 |
 |------------------------------|-----------------------------------------------------------------------------|
 | `iree-compiler`     | IREE's generic compiler tools and helpers                                   |
-| `iree-runtime`      | IREE's runtime, including CPU and GPU backends                              |
+| `iree-base-runtime` | IREE's runtime, including CPU and GPU backends                              |
 | `iree-tools-tf`     | Tools for importing from [TensorFlow](https://www.tensorflow.org/)          |
 | `iree-tools-tflite` | Tools for importing from [TensorFlow Lite](https://www.tensorflow.org/lite) |
 | `iree-jax`          | Tools for importing from [JAX](https://github.com/google/jax)               |
@@ -71,7 +71,7 @@ To use IREE's Python bindings, you will first need to install
     ``` shell
     python -m pip install \
       iree-compiler \
-      iree-runtime
+      iree-base-runtime
     ```
 
 === ":material-alert: Nightly releases"
@@ -84,7 +84,7 @@ To use IREE's Python bindings, you will first need to install
       --find-links https://iree.dev/pip-release-links.html \
       --upgrade \
       iree-compiler \
-      iree-runtime
+      iree-base-runtime
     ```
 
 ### :material-hammer-wrench: Building from source
@@ -164,7 +164,7 @@ like `iree-compile` and `iree-run-module`.  After installing a package from
 pip, these should be added to your path automatically:
 
 ```console
-$ python -m pip install iree-runtime
+$ python -m pip install iree-base-runtime
 $ which iree-run-module
 
 /projects/.venv/Scripts/iree-run-module
@@ -172,7 +172,7 @@ $ which iree-run-module
 
 ## :material-chart-line: Profiling
 
-The tools in the `iree-runtime` package support variants:
+The tools in the `iree-base-runtime` package support variants:
 
 | Variant name | Description |
 | ------------ | ----------- |
