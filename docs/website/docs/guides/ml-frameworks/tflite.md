@@ -61,7 +61,7 @@ graph LR
 
         ``` shell
         python -m pip install \
-          iree-compiler \
+          iree-base-compiler \
           iree-base-runtime \
           iree-tools-tflite
         ```
@@ -75,7 +75,7 @@ graph LR
         python -m pip install \
           --find-links https://iree.dev/pip-release-links.html \
           --upgrade \
-          iree-compiler \
+          iree-base-compiler \
           iree-base-runtime \
           iree-tools-tflite
         ```

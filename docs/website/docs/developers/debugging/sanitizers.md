@@ -116,7 +116,7 @@ ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-12/bin/llvm-symbolizer \
 
     ```shell hl_lines="14-18"
     python -m pip uninstall iree-base-runtime
-    python -m pip uninstall iree-compiler
+    python -m pip uninstall iree-base-compiler
     source iree-build/.env && export PYTHONPATH
 
     LD_PRELOAD=/usr/lib/llvm-12/lib/clang/12.0.0/lib/linux/libclang_rt.asan-x86_64.so \

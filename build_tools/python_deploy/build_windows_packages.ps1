@@ -10,7 +10,7 @@
 # Configure settings with script parameters.
 param(
     [array]$python_versions=@("3.11"),
-    [array]$packages=@("iree-base-runtime", "iree-compiler"),
+    [array]$packages=@("iree-base-runtime", "iree-base-compiler"),
     [System.String]$output_dir
 )
 
@@ -51,8 +51,8 @@ function run() {
             clean_wheels iree_base_runtime $python_version
             build_iree_runtime $python_version
           }
-          "iree-compiler" {
-            clean_wheels iree_compiler $python_version
+          "iree-base-compiler" {
+            clean_wheels iree_base_compiler $python_version
             build_iree_compiler $python_version
           }
           Default {

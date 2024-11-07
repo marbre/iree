@@ -33,7 +33,7 @@ or [Linux](https://rocm.docs.amd.com/en/latest/deploy/linux/quick_start.html).
 Python packages are regularly published to
 [PyPI](https://pypi.org/user/google-iree-pypi-deploy/). See the
 [Python Bindings](../../reference/bindings/python.md) page for more details.
-The core `iree-compiler` package includes the ROCm compiler:
+The core `iree-base-compiler` package includes the ROCm compiler:
 
 --8<-- "docs/website/docs/guides/deployment-configurations/snippets/_iree-compiler-from-release.md"
 

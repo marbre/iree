@@ -15,11 +15,11 @@ components:
 
 | PIP package name             | Description                                                                 |
 |------------------------------|-----------------------------------------------------------------------------|
-| `iree-compiler`     | IREE's generic compiler tools and helpers                                   |
-| `iree-base-runtime` | IREE's runtime, including CPU and GPU backends                              |
-| `iree-tools-tf`     | Tools for importing from [TensorFlow](https://www.tensorflow.org/)          |
-| `iree-tools-tflite` | Tools for importing from [TensorFlow Lite](https://www.tensorflow.org/lite) |
-| `iree-jax`          | Tools for importing from [JAX](https://github.com/google/jax)               |
+| `iree-base-compiler` | IREE's generic compiler tools and helpers                                   |
+| `iree-base-runtime`  | IREE's runtime, including CPU and GPU backends                              |
+| `iree-tools-tf`      | Tools for importing from [TensorFlow](https://www.tensorflow.org/)          |
+| `iree-tools-tflite`  | Tools for importing from [TensorFlow Lite](https://www.tensorflow.org/lite) |
+| `iree-jax`           | Tools for importing from [JAX](https://github.com/google/jax)               |
 
 Collectively, these packages allow for importing from frontends, compiling
 towards various targets, and executing compiled code on IREE's backends.
@@ -70,7 +70,7 @@ To use IREE's Python bindings, you will first need to install
 
     ``` shell
     python -m pip install \
-      iree-compiler \
+      iree-base-compiler \
       iree-base-runtime
     ```
 
@@ -83,7 +83,7 @@ To use IREE's Python bindings, you will first need to install
     python -m pip install \
       --find-links https://iree.dev/pip-release-links.html \
       --upgrade \
-      iree-compiler \
+      iree-base-compiler \
       iree-base-runtime
     ```
 

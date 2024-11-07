@@ -64,7 +64,7 @@ graph LR
 
         ``` shell
         python -m pip install \
-          iree-compiler[onnx] \
+          iree-base-compiler[onnx] \
           iree-base-runtime
         ```
 
@@ -77,7 +77,7 @@ graph LR
         python -m pip install \
           --find-links https://iree.dev/pip-release-links.html \
           --upgrade \
-          iree-compiler[onnx] \
+          iree-base-compiler[onnx] \
           iree-base-runtime
         ```
 

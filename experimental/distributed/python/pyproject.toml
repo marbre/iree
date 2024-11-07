@@ -2,7 +2,7 @@
 name = "iree-distributed"
 version = "0.0.0"
 dependencies = [
-    "iree-compiler",
+    "iree-base-compiler",
     "iree-base-runtime",
     "jax[cpu]",
     "mpi4py",

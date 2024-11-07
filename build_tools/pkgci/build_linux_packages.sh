@@ -27,7 +27,7 @@
 #
 # Valid packages:
 #   iree-base-runtime
-#   iree-compiler
+#   iree-base-compiler
 #
 # Note that this script is meant to be run on CI and it will pollute both the
 # output directory and in-tree build/ directories (under runtime/ and
@@ -68,7 +68,7 @@ manylinux_docker_image="${manylinux_docker_image:-$(uname -m | awk '{print ($1 =
 python_versions="${override_python_versions:-cp311-cp311}"
 output_dir="${output_dir:-${this_dir}/wheelhouse}"
 cache_dir="${cache_dir:-}"
-packages="${packages:-iree-base-runtime iree-compiler}"
+packages="${packages:-iree-base-runtime iree-base-compiler}"
 package_suffix="${package_suffix:-}"
 toolchain_suffix="${toolchain_suffix:-release}"
 # Return ON if we are on a supported platform for CUDA.
@@ -160,10 +160,10 @@ function run_in_docker() {
           build_iree_runtime
           run_audit_wheel "iree_base_runtime${package_suffix}" "${python_version}"
           ;;
-        iree-compiler)
-          clean_wheels "iree_compiler${package_suffix}" "${python_version}"
+        iree-base-compiler)
+          clean_wheels "iree_base_compiler${package_suffix}" "${python_version}"
           build_iree_compiler
-          run_audit_wheel "iree_compiler${package_suffix}" "${python_version}"
+          run_audit_wheel "iree_base_compiler${package_suffix}" "${python_version}"
           ;;
         *)
           echo "Unrecognized package '${package}'"
