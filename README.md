@@ -30,7 +30,7 @@ of feedback on any [communication channels](#communication-channels)
 GitHub release (stable) | [![GitHub Release](https://img.shields.io/github/v/release/iree-org/iree)](https://github.com/iree-org/iree/releases/latest)
 GitHub release (nightly) | [![GitHub Release](https://img.shields.io/github/v/release/iree-org/iree?include_prereleases)](https://github.com/iree-org/iree/releases)
 Python iree-compiler | [![PyPI version](https://badge.fury.io/py/iree-compiler.svg)](https://badge.fury.io/py/iree-compiler)
-Python iree-runtime | [![PyPI version](https://badge.fury.io/py/iree-runtime.svg)](https://badge.fury.io/py/iree-runtime)
+Python iree-base-runtime | [![PyPI version](https://badge.fury.io/py/iree-base-runtime.svg)](https://badge.fury.io/py/iree-base-runtime)
 
 #### Build status
 
