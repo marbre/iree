@@ -31,7 +31,7 @@ jobs:
           compiler_package_version="$(python3 build_tools/python_deploy/compute_local_version.py compiler -rc)"
           echo "compiler_package_version=${compiler_package_version}" >> $GITHUB_ENV
 
-          # iree-runtime version
+          # iree-base-runtime version
           runtime_package_version="$(python3 build_tools/python_deploy/compute_local_version.py runtime -rc)"
           echo "runtime_package_version=${runtime_package_version}" >> $GITHUB_ENV
 
