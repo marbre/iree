@@ -33,7 +33,7 @@ A number of packages are produced automatically:
   binaries and development assets needed to use or depend on the C/C++ parts
   of the project.
 * `iree-compiler`: Binary Python wheels
-* `iree-runtime`: Binary Python wheels
+* `iree-base-runtime`: Binary Python wheels
 * `iree-tools-tf` and `iree-tools-tflite`: Pure Python wheels
 
 #### Linux Builds
@@ -52,7 +52,7 @@ Windows builds are built using GitHub-hosted runners. Due to the cost, the
 project aims to target the most recent version of Python only while building
 version N-1 for the first year of the lifecycle of the next version.
 
-Only the Python `iree-compiler` and `iree-runtime` packages are built for
+Only the Python `iree-compiler` and `iree-base-runtime` packages are built for
 Windows.
 
 The release is published even if the Windows build fails. When this happens, it
@@ -64,7 +64,7 @@ MacOS builds are performed using GitHub-hosted runners. Due to the cost, the
 project aims to target the most recent version of Python only while building
 version N-1 for the first year of the lifecycle of the next version.
 
-Only the Python `iree-compiler` and `iree-runtime` packages are built for
+Only the Python `iree-compiler` and `iree-base-runtime` packages are built for
 MacOS.
 
 The release is published even if the MacOS build fails. When this happens, it
@@ -83,7 +83,7 @@ release process:
 ### PyPI
 
 * https://pypi.org/project/iree-compiler/
-* https://pypi.org/project/iree-runtime/
+* https://pypi.org/project/iree-base-runtime/
 * https://pypi.org/project/iree-turbine/
 * https://pypi.org/project/shark-turbine/ (transitional until switched to
   iree-turbine)
@@ -93,7 +93,7 @@ release process:
 Deprecated projects no longer updated:
 
 * https://pypi.org/project/iree-runtime-instrumented/ (functionality is
-  included in the main iree-runtime package)
+  included in the main iree-base-runtime package)
 * https://pypi.org/project/iree-tools-xla/ (functionality is no longer needed)
 
 
@@ -131,7 +131,7 @@ There are multiple release artifacts that are deployed from this project:
 * shark-turbine wheel (transitional while switching to iree-turbine)
 * iree-turbine wheel
 * iree-compiler wheels
-* iree-runtime wheels
+* iree-base-runtime wheels
 
 Typically we deploy IREE compiler and runtime wheels along with a turbine
 release, effectively promoting a nightly.
@@ -159,8 +159,8 @@ Build an official release:
 ```
 
 This will download all deps, including wheels for all supported platforms and
-Python versions for iree-compiler and iree-runtime. All wheels will be placed
-in the `wheelhouse/` directory.
+Python versions for iree-compiler and iree-base-runtime. All wheels will be
+placed in the `wheelhouse/` directory.
 
 
 #### Testing
@@ -187,7 +187,7 @@ pip freeze
 Push IREE deps (if needed/updated):
 
 ```
-twine upload wheelhouse/iree_compiler-* wheelhouse/iree_runtime-*
+twine upload wheelhouse/iree_compiler-* wheelhouse/iree_base_runtime-*
 ```
 
 Push built wheels:
@@ -203,7 +203,7 @@ TODO: Script this
 From the testing venv:
 
 ```
-pip uninstall -y shark-turbine iree-turbine iree-compiler iree-runtime
+pip uninstall -y shark-turbine iree-turbine iree-compiler iree-base-runtime
 pip install iree-turbine
 pytest core/tests
 ```
