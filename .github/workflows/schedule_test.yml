@@ -1,0 +1,26 @@
+name: Schedule test
+
+on:
+  schedule:
+    - cron: "53 * * * *"
+    - cron: "55 * * * *"
+
+
+  workflow_dispatch:
+
+jobs:
+  job_one:
+    if: ${{ github.repository_owner == 'marbre' || github.event_name != 'schedule' }}
+    name: Job 1
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo "Running: Job 1"
+
+  job_two:
+    if: ${{ github.repository_owner == 'marbre' && github.event_name != 'schedule' }}
+    name: Job 2
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo "Running: Job 2"
