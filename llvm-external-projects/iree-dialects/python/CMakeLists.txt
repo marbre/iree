@@ -46,6 +46,8 @@ declare_mlir_python_extension(IREEDialectsPythonExtensions.Main
     IREEDialectsCAPI
   PRIVATE_LINK_LIBS
     LLVMSupport
+  PYTHON_BINDINGS_LIBRARY
+    nanobind
 )
 
 ################################################################################
