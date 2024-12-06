@@ -182,6 +182,8 @@ declare_mlir_python_extension(IREECompilerPythonExtensions.Registration
     iree_compiler_API_SharedImpl
   PRIVATE_LINK_LIBS
     LLVMSupport
+  PYTHON_BINDINGS_LIBRARY
+    nanobind
 )
 
 declare_mlir_python_extension(IREECompilerPythonExtensions.CompilerDialects
@@ -193,6 +195,8 @@ declare_mlir_python_extension(IREECompilerPythonExtensions.CompilerDialects
     iree_compiler_API_SharedImpl
   PRIVATE_LINK_LIBS
     LLVMSupport
+  PYTHON_BINDINGS_LIBRARY
+    nanobind
 )
 
 ################################################################################
