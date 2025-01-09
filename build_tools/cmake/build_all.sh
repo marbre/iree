@@ -69,16 +69,18 @@ declare -a CMAKE_ARGS=(
 "$CMAKE_BIN" "${CMAKE_ARGS[@]}"
 echo "Building all"
 echo "------------"
-"$CMAKE_BIN" --build "${BUILD_DIR}" -- -k 0
+#"$CMAKE_BIN" --build "${BUILD_DIR}" -- -k 0
 
 echo "Building 'install'"
 echo "------------------"
-"${CMAKE_BIN}" --build "${BUILD_DIR}" --target install -- -k 0
+#"${CMAKE_BIN}" --build "${BUILD_DIR}" --target install -- -k 0
 
 if (( IREE_BUILD_TEST_DEPS == 1 )); then
   echo "Building test deps"
   echo "------------------"
   "$CMAKE_BIN" --build "${BUILD_DIR}" --target iree-test-deps -- -k 0
+else
+  echo "Skipped building test deps"
 fi
 
 if (( IREE_USE_CCACHE == 1 )); then
